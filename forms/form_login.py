@@ -1,24 +1,21 @@
 import tkinter as tk
-from tkinter import ttk,messagebox
+from tkinter import ttk, messagebox
 from tkinter.font import BOLD
 import util.generic as utl
 from forms.form_master import MasterPanel
+from forms.form_register import RegistrationScreen  # Importa la clase de registro
+import csv
+
 class App:
-    
-    def verificar(self):
-        user=self.usuario.get()
-        password=self.password.get()
-        if(user=="root"and password=="1234"):
-            self.ventana.destroy()
-            MasterPanel()
-        else:
-            messagebox.showerror(message="La contraseña ingresada es incorrecta", title="Mensaje")
     def __init__(self):
-        self.ventana=tk.Tk()
-        self.ventana.title("Inicio de sesion")
+        # Crear un diccionario de usuarios y contraseñas válidos
+        self.usuarios_validos = {"root": "1234"}
+
+        self.ventana = tk.Tk()
+        self.ventana.title("Inicio de sesión")
         self.ventana.geometry("800x500")
-        self.ventana.resizable(width=0,height=0)
-        utl.centrar_ventana(self.ventana,800,500)
+        self.ventana.resizable(width=0, height=0)
+        utl.centrar_ventana(self.ventana, 800, 500)
         
         
         logo=utl.leer_imagen("./imagenes/logo.png",(200,200))
@@ -60,4 +57,28 @@ class App:
         inicio.pack(fill=tk.X,padx=20,pady=20)
         inicio.bind("<Return>",(lambda event:self.verificar()))
         
-        self.ventana.mainloop()
+        # Agregar el botón "Registrarse"
+        registrarse = tk.Button(frame_form_fill, text="Registrarse", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=self.abrir_registro)
+        registrarse.pack(fill=tk.X, padx=20, pady=20)
+    
+    def abrir_registro(self):
+        # Abrir la pantalla de registro
+        self.ventana_registro = tk.Toplevel(self.ventana)
+        RegistrationScreen(self.ventana_registro)
+        
+    def verificar(self):
+        user = self.usuario.get()
+        password = self.password.get()
+        
+        # Verifica las credenciales con los registros del archivo CSV
+        with open('registros.csv', mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if row['usuario'] == user and row['contrasena'] == password:
+                    self.ventana.destroy()
+                    MasterPanel(user)  # Pasar el nombre de usuario a MasterPanel
+                    return
+        
+        # Si no se encontró coincidencia, muestra un mensaje de error
+        messagebox.showerror(message="La contraseña o el usuario ingresado son incorrectos", title="Mensaje")
+
