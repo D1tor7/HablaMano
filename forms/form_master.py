@@ -30,13 +30,17 @@ class MasterPanel:
         self.boton_evaluar_letras.destroy()
 
         # Agregar dos nuevos botones: "Letras con Movimiento" y "Letras sin Movimiento"
-        boton_letras_con_movimiento = tk.Button(self.ventana, text="Letras con Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff")
+        boton_letras_con_movimiento = tk.Button(self.ventana, text="Letras con Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff" ,command=self.abrir_archivo_py_M)
         boton_letras_con_movimiento.place(x=50, y=50, width=200, height=50)
 
         # Agregar un botón "Letras sin Movimiento" que abre el archivo .py y muestra las letras aleatorias
         boton_letras_sin_movimiento = tk.Button(self.ventana, text="Letras sin Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=self.mostrar_letras_aleatorias)
         boton_letras_sin_movimiento.place(x=50, y=110, width=200, height=50)
 
+    def abrir_archivo_py_M(self):
+        ruta_archivo_py = r"C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasConMovimiento/IdentificadorMovimiento.py"
+        subprocess.Popen(["python", ruta_archivo_py])
+        
     def abrir_archivo_py(self):
         ruta_archivo_py = r"C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasSinMovimiento/ProyectoMediaPipe_SinMovimiento.py"
         subprocess.Popen(["python", ruta_archivo_py])
@@ -74,7 +78,7 @@ class MasterPanel:
             self.etiqueta_letras_aleatorias.config(text=f"Letra Actual: {letra_actual}")
 
             # Programar la llamada recursiva para dentro de 10 segundos
-            self.ventana.after(1000, self.cambiar_letras_cada_10_segundos)
+            self.ventana.after(5000, self.cambiar_letras_cada_10_segundos)
         else:
             # Cuando se acaban las letras, imprimir "timeout"
             self.etiqueta_letras_aleatorias.config(text="timeout:#")
