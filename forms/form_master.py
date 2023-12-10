@@ -1,9 +1,13 @@
-#form_master.py
+# form_master.py
+
 import tkinter as tk
 from tkinter.font import BOLD
+from PIL import Image, ImageTk
 import subprocess
-import LogicaEvaluacion
 import random
+import pandas as pd
+
+
 class MasterPanel:
     def __init__(self, usuario_actual):
         self.ventana = tk.Tk()
@@ -12,79 +16,138 @@ class MasterPanel:
         self.ventana.geometry("%dx%d+0+0" % (w, h))
         self.ventana.config(bg="#fcfcfc")
         self.ventana.resizable(width=0, height=0)
+        self.datos = pd.read_csv('common_letter.csv')
+        self.letras_columna = self.datos['letras'].apply(lambda x: x.split(','))
 
-        # Agregar una etiqueta para mostrar el nombre del usuario en la esquina
-        label_usuario = tk.Label(self.ventana, text=f"Usuario: {usuario_actual}", font=("Times", 12, BOLD), bg="#fcfcfc", fg="#666a88")
-        label_usuario.place(x=w - 10, y=10, anchor="ne")
+        # Configurar las etiquetas a la izquierda
+        self.etiqueta_letra_actual = tk.Label(self.ventana, text="", font=("Times", 20, BOLD), bg="#fcfcfc", fg="#666a88", anchor="w")
+        self.etiqueta_letra_actual.place(x=10, y=h // 2, anchor="w")
 
-        # Agregar un botón "Evaluar Letras"
-        self.boton_evaluar_letras = tk.Button(self.ventana, text="Evaluar Letras", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=self.mostrar_botones)
-        self.boton_evaluar_letras.place(x=50, y=50, width=200, height=50)
+        self.etiqueta_mensaje = tk.Label(self.ventana, text="", font=("Times", 16), bg="#fcfcfc", fg="#666a88", anchor="w")
+        self.etiqueta_mensaje.place(x=10, y=h // 2 + 50, anchor="w")
 
-        # Agregar una etiqueta para mostrar las letras aleatorias
-        self.etiqueta_letras_aleatorias = tk.Label(self.ventana, text="", font=("Times", 12), bg="#fcfcfc", fg="#000")
-        self.etiqueta_letras_aleatorias.place(x=50, y=160)
+        self.etiqueta_resultado = tk.Label(self.ventana, image=None, bg="#fcfcfc")
+        self.etiqueta_resultado.place(x=10, y=h // 2 + 100, anchor="w")
+
+        label_usuario = tk.Label(self.ventana, text=f"Usuario: {usuario_actual}", font=("Times", 12, BOLD), bg="#fcfcfc", fg="#666a88", anchor="w")
+        label_usuario.place(x=10, y=10, anchor="w")
+
+        self.boton_evaluar_letras = tk.Button(self.ventana, text="Evaluar Letras", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=lambda: self.limpiar_pantalla(self.mostrar_botones))
+        self.boton_evaluar_letras.place(x=10, y=50, width=200, height=50)
+
+        self.puntaje = 0
+        self.letras_totales = 0  # Variable para contar el total de letras
+        self.imagen_actual = None
+
+        self.imagen_correcto = ImageTk.PhotoImage(Image.open("imagenes/Resultado/check.png"))
+        self.imagen_incorrecto = ImageTk.PhotoImage(Image.open("imagenes/Resultado/incorrect.png"))
+
+    def limpiar_pantalla(self, siguiente_funcion):
+        # Destruir todos los widgets en la ventana excepto la etiqueta de letras actuales
+        for widget in self.ventana.winfo_children():
+            if isinstance(widget, tk.Widget) and widget.winfo_class() != "Label" and widget != self.etiqueta_letra_actual:
+                widget.destroy()
+
+        # Llamar a la función siguiente
+        siguiente_funcion()
 
     def mostrar_botones(self):
-        # Eliminar el botón "Evaluar Letras"
-        self.boton_evaluar_letras.destroy()
+        boton_letras_con_movimiento = tk.Button(self.ventana, text="Letras con Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=lambda: self.limpiar_pantalla(self.abrir_archivo_py_M))
+        boton_letras_con_movimiento.place(x=10, y=50, width=200, height=50)
 
-        # Agregar dos nuevos botones: "Letras con Movimiento" y "Letras sin Movimiento"
-        boton_letras_con_movimiento = tk.Button(self.ventana, text="Letras con Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff" ,command=self.abrir_archivo_py_M)
-        boton_letras_con_movimiento.place(x=50, y=50, width=200, height=50)
+        boton_letras_sin_movimiento = tk.Button(
+            self.ventana, text="Letras sin Movimiento", font=("Times", 15, BOLD),
+            bg="#3a7ff6", bd=0, fg="#fff", command=lambda: [self.abrir_archivo_py_M(), self.mostrar_letras_sin_movimiento(), self.limpiar_canvas(), self.abrir_archivo_logic()]
+        )
 
-        # Agregar un botón "Letras sin Movimiento" que abre el archivo .py y muestra las letras aleatorias
-        boton_letras_sin_movimiento = tk.Button(self.ventana, text="Letras sin Movimiento", font=("Times", 15, BOLD), bg="#3a7ff6", bd=0, fg="#fff", command=self.mostrar_letras_aleatorias)
-        boton_letras_sin_movimiento.place(x=50, y=110, width=200, height=50)
+        boton_letras_sin_movimiento.place(x=10, y=110, width=200, height=50)
+
+    def abrir_archivo_logic(self):
+        ruta_logica_archivo_py = r"C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/forms/LogicaEvaluacion.py"
+        subprocess.Popen(["python", ruta_logica_archivo_py])
 
     def abrir_archivo_py_M(self):
-        ruta_archivo_py = r"C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasConMovimiento/IdentificadorMovimiento.py"
-        subprocess.Popen(["python", ruta_archivo_py])
-        
-    def abrir_archivo_py(self):
         ruta_archivo_py = r"C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasSinMovimiento/ProyectoMediaPipe_SinMovimiento.py"
         subprocess.Popen(["python", ruta_archivo_py])
 
-    def limpiar_canvas(self):
-        # Destruir todos los widgets en el canvas
-        for widget in self.ventana.winfo_children():
-            if isinstance(widget, tk.Widget) and widget.winfo_class() != "Label":
-                widget.destroy()
+    def mostrar_letras_sin_movimiento(self):
+        # Obtener la letra más común dinámicamente
+        self.etiqueta_letra_mas_comun = tk.Label(self.ventana, text="", font=("Times", 12), bg="#fcfcfc", fg="#666a88", anchor="w")
+        self.etiqueta_letra_mas_comun.place(x=10, y=170, anchor="w")
 
-    def mostrar_letras_aleatorias(self):
-        try:
-            # Limpiar los botones antes de mostrar las letras
-            self.limpiar_canvas()
+        self.etiqueta_lista_letras = tk.Label(self.ventana, text="", font=("Times", 12), bg="#fcfcfc", fg="#666a88", anchor="w")
+        self.etiqueta_lista_letras.place(x=10, y=200, anchor="w")
 
-            # Obtener las letras aleatorias del módulo LogicaEvaluacion
-            self.letras_actuales = LogicaEvaluacion.generar_letras_aleatorias()
+        self.actualizar_letra_mas_comun()
 
-            # Iniciar el ciclo de cambio de letras cada 10 segundos
-            self.cambiar_letras_cada_10_segundos()
+        self.mostrar_siguiente_letra(self.letras_columna.iloc[0], 0)
 
-            # Abrir el archivo ProyectoMediaPipe_SinMovimiento.py
-            self.abrir_archivo_py()
+    def actualizar_letra_mas_comun(self):
+        # Leer el archivo CSV nuevamente para obtener la letra más común
+        datos_actualizados = pd.read_csv('common_letter.csv')
+        letra_mas_comun = datos_actualizados['Most Common Letter'].iloc[0]
+        self.etiqueta_letra_mas_comun.config(text=f"Letra más común: {letra_mas_comun}")
+        self.ventana.after(3000, self.actualizar_letra_mas_comun)
 
-        except Exception as e:
-            # Manejar cualquier excepción que pueda ocurrir durante la ejecución
-            print(f"Error al mostrar letras aleatorias: {e}")
+    def mostrar_siguiente_letra(self, lista_letras, indice):
+        if indice < len(lista_letras):
+            letra_actual = lista_letras[indice]
 
-    def cambiar_letras_cada_10_segundos(self):
-        if self.letras_actuales:
-            # Obtener la próxima letra de la lista
-            letra_actual = self.letras_actuales.pop(0)
+            self.etiqueta_letra_actual.config(text=f"Letra actual: {letra_actual}")
 
-            # Actualizar la etiqueta con la nueva letra
-            self.etiqueta_letras_aleatorias.config(text=f"Letra Actual: {letra_actual}")
-
-            # Programar la llamada recursiva para dentro de 10 segundos
-            self.ventana.after(5000, self.cambiar_letras_cada_10_segundos)
+            # Esperar 3 segundos antes de verificar la letra
+            self.ventana.after(10000, lambda: self.verificar_letra(lista_letras, letra_actual, indice))
         else:
-            # Cuando se acaban las letras, imprimir "timeout"
-            self.etiqueta_letras_aleatorias.config(text="timeout:#")
+            self.ventana.after(10000, self.limpiar_etiquetas)
+
+    def verificar_letra(self, lista_letras, letra_actual, indice):
+        if letra_actual.lower() == self.etiqueta_letra_mas_comun.cget("text").split(":")[1].strip().lower():
+            self.etiqueta_mensaje.config(text="Correcto", fg="green")
+            self.imagen_actual = self.imagen_correcto
+            self.puntaje += 10  # Sumar 10 puntos por respuesta correcta
+        else:
+            self.etiqueta_mensaje.config(text="Incorrecto", fg="red")
+            self.imagen_actual = self.imagen_incorrecto
+
+        self.etiqueta_resultado.config(image=self.imagen_actual)
+        self.etiqueta_letra_actual.lift()
+        self.etiqueta_mensaje.lift()
+
+        self.ventana.update_idletasks()
+
+        self.ventana.after(2000, self.limpiar_mensaje_imagen)
+        self.ventana.after(4000, self.limpiar_imagen)
+
+        self.letras_totales += 1  # Incrementar el total de letras
+
+        if self.letras_totales == len(lista_letras):  # Verificar si se ha llegado al final de la lista de letras
+            self.ventana.after(4000, self.mostrar_puntuacion)
+        else:
+            self.ventana.after(4000, lambda: self.mostrar_siguiente_letra(lista_letras, indice + 1))
+
+    def mostrar_puntuacion(self):
+        mensaje_puntuacion = f"Puntuación total: {self.puntaje}"
+        self.etiqueta_mensaje.config(text=mensaje_puntuacion, fg="blue")
+        self.ventana.after(2000, self.limpiar_mensaje_imagen)
+        self.ventana.after(4000, self.limpiar_etiquetas)
+
+    def limpiar_etiquetas(self):
+        self.etiqueta_letra_actual.config(text="")
+        self.etiqueta_mensaje.config(text="")
+        self.etiqueta_resultado.config(image=None)
+        self.limpiar_imagen()
+
+    def limpiar_mensaje_imagen(self):
+        self.etiqueta_mensaje.config(text="")
+        self.etiqueta_resultado.config(image=None)
+
+    def limpiar_imagen(self):
+        if self.imagen_actual is not None:
+            self.etiqueta_resultado.config(image=None)
+            self.imagen_actual = None  # Restablecer la referencia de la imagen actual
 
 
 if __name__ == "__main__":
-    usuario_actual = "root"  # Debes definir el nombre de usuario actual aquí
+    usuario_actual = "root"
     master_panel = MasterPanel(usuario_actual)
     master_panel.ventana.mainloop()

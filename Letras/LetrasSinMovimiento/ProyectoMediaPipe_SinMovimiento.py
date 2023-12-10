@@ -1,3 +1,4 @@
+import csv
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -6,10 +7,28 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe import ImageFormat
 import numpy as np
+import time
+
+# Initialize variables for letter counting
+letter_counts = {}
+
+# Record the start time
+start_time = time.time()
+
+# CSV file name
+csv_file = "common_letter.csv"
+
+# Function to save the most common letter to CSV
+def save_to_csv(letter):
+    with open(csv_file, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Most Common Letter"])
+        writer.writerow([letter])
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
+
 
 MARGIN = 10  # pixels
 FONT_SIZE = 1
@@ -101,7 +120,26 @@ while cap.isOpened():
 
     recognition_result = recognizer.recognize(rgb_frame)
     if len(recognition_result.gestures) > 0:
-        print(recognition_result.gestures[0][0].category_name)
+        letter = recognition_result.gestures[0][0].category_name
+
+
+        # Update letter count in the dictionary
+        letter_counts[letter] = letter_counts.get(letter, 0) + 1
+
+        # Check if 10 seconds have passed
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= 2:
+            # Find the most common letter
+            most_common_letter = max(letter_counts, key=letter_counts.get)
+            print(f"Most common letter in the last 10 seconds: {most_common_letter}")
+
+            # Save the most common letter to CSV
+            save_to_csv(most_common_letter)
+
+
+            # Reset variables for the next 10-second interval
+            letter_counts = {}
+            start_time = time.time()
 
     # Draw the hand annotations on the image.
     # image.flags.writeable = True
