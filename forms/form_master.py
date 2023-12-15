@@ -18,6 +18,11 @@ class MasterPanel:
         self.ventana.resizable(width=0, height=0)
         self.datos = pd.read_csv('common_letter.csv')
         self.letras_columna = self.datos['letras'].apply(lambda x: x.split(','))
+        self.contador_actual = None
+
+        self.estado_mensaje = tk.StringVar()
+        self.color_mensaje = tk.StringVar()
+
 
         # Configurar las etiquetas a la izquierda
         self.etiqueta_letra_actual = tk.Label(self.ventana, text="", font=("Times", 20, BOLD), bg="#fcfcfc", fg="#666a88", anchor="w")
@@ -39,8 +44,9 @@ class MasterPanel:
         self.letras_totales = 0  # Variable para contar el total de letras
         self.imagen_actual = None
 
-        self.imagen_correcto = ImageTk.PhotoImage(Image.open("imagenes/Resultado/check.png"))
-        self.imagen_incorrecto = ImageTk.PhotoImage(Image.open("imagenes/Resultado/incorrect.png"))
+       
+        self.etiqueta_contador = tk.Label(self.ventana, text="", font=("Times", 12), bg="#fcfcfc", fg="#666a88", anchor="w")
+        self.etiqueta_contador.place(x=10, y=230, anchor="w")
 
     def limpiar_pantalla(self, siguiente_funcion):
         # Destruir todos los widgets en la ventana excepto la etiqueta de letras actuales
@@ -90,33 +96,52 @@ class MasterPanel:
         self.ventana.after(3000, self.actualizar_letra_mas_comun)
 
     def mostrar_siguiente_letra(self, lista_letras, indice):
+        self.detener_contador_actual()  # Detener el contador actual antes de iniciar uno nuevo
+
+        self.contador_segundos = 10  # Establecer el tiempo de espera en segundos
+        self.actualizar_contador()
         if indice < len(lista_letras):
             letra_actual = lista_letras[indice]
 
             self.etiqueta_letra_actual.config(text=f"Letra actual: {letra_actual}")
 
-            # Esperar 3 segundos antes de verificar la letra
+            # Iniciar el contador antes de verificar la letra
+            self.ventana.after(1000, lambda: self.actualizar_contador())
             self.ventana.after(10000, lambda: self.verificar_letra(lista_letras, letra_actual, indice))
         else:
             self.ventana.after(10000, self.limpiar_etiquetas)
+    
+    def actualizar_contador(self):
+        if self.contador_segundos > 0:
+            self.etiqueta_contador.config(text=f"Tiempo restante: {self.contador_segundos} segundos")
+            self.contador_segundos -= 0.5
+            self.contador_actual = self.ventana.after(1000, self.actualizar_contador)  # Actualizar cada 1 segundo
+        else:
+            self.etiqueta_contador.config(text="")
+            self.detener_contador_actual()
+    
+    def detener_contador_actual(self):
+        if self.contador_actual is not None:
+            self.ventana.after_cancel(self.contador_actual)
+            self.contador_actual = None
+
 
     def verificar_letra(self, lista_letras, letra_actual, indice):
         if letra_actual.lower() == self.etiqueta_letra_mas_comun.cget("text").split(":")[1].strip().lower():
             self.etiqueta_mensaje.config(text="Correcto", fg="green")
-            self.imagen_actual = self.imagen_correcto
             self.puntaje += 10  # Sumar 10 puntos por respuesta correcta
         else:
             self.etiqueta_mensaje.config(text="Incorrecto", fg="red")
-            self.imagen_actual = self.imagen_incorrecto
 
-        self.etiqueta_resultado.config(image=self.imagen_actual)
+        # Elimina el uso de imágenes
+        # self.etiqueta_resultado.config(image=self.imagen_actual)
+
         self.etiqueta_letra_actual.lift()
         self.etiqueta_mensaje.lift()
 
         self.ventana.update_idletasks()
 
         self.ventana.after(2000, self.limpiar_mensaje_imagen)
-        self.ventana.after(4000, self.limpiar_imagen)
 
         self.letras_totales += 1  # Incrementar el total de letras
 
@@ -128,13 +153,14 @@ class MasterPanel:
     def mostrar_puntuacion(self):
         mensaje_puntuacion = f"Puntuación total: {self.puntaje}"
         self.etiqueta_mensaje.config(text=mensaje_puntuacion, fg="blue")
-        self.ventana.after(2000, self.limpiar_mensaje_imagen)
-        self.ventana.after(4000, self.limpiar_etiquetas)
+        self.ventana.after(10000, self.limpiar_mensaje_imagen)
+        self.ventana.after(10000, self.limpiar_etiquetas)
 
     def limpiar_etiquetas(self):
         self.etiqueta_letra_actual.config(text="")
         self.etiqueta_mensaje.config(text="")
-        self.etiqueta_resultado.config(image=None)
+        # Elimina el uso de la etiqueta de resultado y la imagen
+        # self.etiqueta_resultado.config(image=None)
         self.limpiar_imagen()
 
     def limpiar_mensaje_imagen(self):

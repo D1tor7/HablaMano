@@ -89,14 +89,14 @@ def draw_landmarks_on_image(rgb_image, detection_result):
 
 # STEP 2: Create an HandLandmarker object.
 base_options = python.BaseOptions(
-    model_asset_path="Letras/LetrasSinMovimiento/hand_landmarker.task"
+    model_asset_path="C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasSinMovimiento/hand_landmarker.task"
 )
 options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=2)
 detector = vision.HandLandmarker.create_from_options(options)
 
 # STEP 2: Create an GestureRecognizer object.
 base_options = python.BaseOptions(
-    model_asset_path="Letras/LetrasSinMovimiento/gesture_recognizer_lenguaje_senas.task"
+    model_asset_path="C:/Users/diego/OneDrive/Documentos/GitHub/HablaMano/Letras/LetrasSinMovimiento/gesture_recognizer_lenguaje_senas.task"
 )
 options = vision.GestureRecognizerOptions(base_options=base_options)
 recognizer = vision.GestureRecognizer.create_from_options(options)
